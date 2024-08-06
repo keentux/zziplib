@@ -291,10 +291,10 @@ __zzip_fetch_disk_trailer(int fd, zzip_off_t filesize, struct _disk_trailer* _zz
             register unsigned char* end = mapped + maplen;
             register unsigned char* tail;
             for (tail = end - 1; (tail >= mapped); tail--) {
+#ifndef ZZIP_DISK64_TRAILER
                 if ((*tail == 'P') && /* quick pre-check for trailer magic */
                     end - tail >= __sizeof(struct zzip_disk_trailer) - 2 &&
                     zzip_disk_trailer_check_magic(tail)) {
-#ifndef ZZIP_DISK64_TRAILER
                     /* if the file-comment is not present, it happens
                        that the z_comment field often isn't either */
                     if (end - tail >= __sizeof(*trailer)) {
@@ -306,12 +306,15 @@ __zzip_fetch_disk_trailer(int fd, zzip_off_t filesize, struct _disk_trailer* _zz
                         trailer->z_comment[1] = 0;
                     }
 #else
-                    struct zzip_disk_trailer* orig   = (struct zzip_disk_trailer*) tail;
-                    trailer->zz_tail                 = tail;
-                    trailer->zz_entries              = zzip_disk_trailer_localentries(orig);
-                    trailer->zz_finalentries         = zzip_disk_trailer_finalentries(orig);
-                    trailer->zz_rootseek             = zzip_disk_trailer_rootseek(orig);
-                    trailer->zz_rootsize             = zzip_disk_trailer_rootsize(orig);
+                if ((*tail == 'P') && /* quick pre-check for trailer magic */
+                    end - tail >= __sizeof(struct zzip_disk_trailer) &&
+                    zzip_disk_trailer_check_magic(tail)) {
+                        struct zzip_disk_trailer* orig   = (struct zzip_disk_trailer*) tail;
+                        trailer->zz_tail                 = tail;
+                        trailer->zz_entries              = zzip_disk_trailer_localentries(orig);
+                        trailer->zz_finalentries         = zzip_disk_trailer_finalentries(orig);
+                        trailer->zz_rootseek             = zzip_disk_trailer_rootseek(orig);
+                        trailer->zz_rootsize             = zzip_disk_trailer_rootsize(orig);
 #endif
                     if (trailer->zz_rootseek < 0 || trailer->zz_rootsize < 0)
                         return (ZZIP_CORRUPTED); // forged value
@@ -328,11 +331,13 @@ __zzip_fetch_disk_trailer(int fd, zzip_off_t filesize, struct _disk_trailer* _zz
                         return (0);
                     }
                 }
+#ifndef ZZIP_DISK64_TRAILER
                 else if ((*tail == 'P') && end - tail >= __sizeof(struct zzip_disk64_trailer) - 2 &&
                          zzip_disk64_trailer_check_magic(tail)) {
-#ifndef ZZIP_DISK64_TRAILER
                     return (ZZIP_DIR_LARGEFILE);
 #else
+                else if ((*tail == 'P') && end - tail >= __sizeof(struct zzip_disk64_trailer) &&
+                         zzip_disk64_trailer_check_magic(tail)) {
                     struct zzip_disk64_trailer* orig = (struct zzip_disk64_trailer*) tail;
                     trailer->zz_tail                 = tail;
                     trailer->zz_entries              = zzip_disk64_trailer_localentries(orig);
