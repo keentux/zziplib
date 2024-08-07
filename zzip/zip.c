@@ -307,14 +307,14 @@ __zzip_fetch_disk_trailer(int fd, zzip_off_t filesize, struct _disk_trailer* _zz
                     }
 #else
                 if ((*tail == 'P') && /* quick pre-check for trailer magic */
-                    end - tail >= __sizeof(struct zzip_disk_trailer) &&
-                    zzip_disk_trailer_check_magic(tail)) {
-                        struct zzip_disk_trailer* orig   = (struct zzip_disk_trailer*) tail;
-                        trailer->zz_tail                 = tail;
-                        trailer->zz_entries              = zzip_disk_trailer_localentries(orig);
-                        trailer->zz_finalentries         = zzip_disk_trailer_finalentries(orig);
-                        trailer->zz_rootseek             = zzip_disk_trailer_rootseek(orig);
-                        trailer->zz_rootsize             = zzip_disk_trailer_rootsize(orig);
+                        end - tail >= __sizeof(struct zzip_disk_trailer) &&
+                        zzip_disk_trailer_check_magic(tail)) {
+                    struct zzip_disk_trailer* orig   = (struct zzip_disk_trailer*) tail;
+                    trailer->zz_tail                 = tail;
+                    trailer->zz_entries              = zzip_disk_trailer_localentries(orig);
+                    trailer->zz_finalentries         = zzip_disk_trailer_finalentries(orig);
+                    trailer->zz_rootseek             = zzip_disk_trailer_rootseek(orig);
+                    trailer->zz_rootsize             = zzip_disk_trailer_rootsize(orig);
 #endif
                     if (trailer->zz_rootseek < 0 || trailer->zz_rootsize < 0)
                         return (ZZIP_CORRUPTED); // forged value
